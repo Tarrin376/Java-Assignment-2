@@ -5,10 +5,24 @@ public class Section1 {
     public static void main(String[] args) {
         Question1 q1 = new Question1("stopwords.txt", "input.txt");
         ArrayList<String> res = q1.findNonStopWords();
-        String[] insSort = insertionSort(res.toArray(new String[res.size()]));
-        String[] mSort = mergeSort(res.toArray(new String[res.size()]), 0, res.size() - 1);
+        int maxSize = Math.min(500, res.size());
 
-        System.out.println(Arrays.toString(mSort));
+        measureSortPerformance(res.subList(0, 100).toArray(new String[100]));
+        measureSortPerformance(res.subList(0, 200).toArray(new String[200]));
+        measureSortPerformance(res.subList(0, maxSize).toArray(new String[maxSize]));
+    }
+
+    public static void measureSortPerformance(String[] words) {
+        long beforeInsertionSort = System.nanoTime();
+        insertionSort(words);
+        long insertionSortTime = System.nanoTime() - beforeInsertionSort;
+
+        long beforeMergeSort = System.nanoTime();
+        mergeSort(words, 0, words.length - 1);
+        long mergeSortTime = System.nanoTime() - beforeMergeSort;
+
+        System.out.println("MERGE SORT -> Time taken (in nanoseconds): " + mergeSortTime + " | Words: " + words.length);
+        System.out.println("INSERTION SORT -> Time taken (in nanoseconds): " + insertionSortTime + " | Words: " + words.length + "\n");
     }
 
     private static String[] insertionSort(String[] listOfWords) {
