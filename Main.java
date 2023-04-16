@@ -144,7 +144,11 @@ class Trie {
     }
 }
 
-class MergeSort {
+interface ISort {
+    void printComparisons();
+}
+
+class MergeSort implements ISort {
     private int comparisons;
     public String[] words;
 
@@ -189,7 +193,7 @@ class MergeSort {
     }
 }
 
-class InsertionSort {
+class InsertionSort implements ISort {
     private int comparisons;
     public String[] words;
 
