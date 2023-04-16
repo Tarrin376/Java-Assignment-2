@@ -6,12 +6,16 @@ import java.io.*;
 public class Solution {
     public static void main(String[] args) {
         try {
-            Question1 q1 = new Question1("stopwords.txt", "input.txt");
+            Question1 q1 = new Question1("C:\\Users\\tarri\\IdeaProjects\\program\\src\\stopwords.txt", "C:\\Users\\tarri\\IdeaProjects\\program\\src\\input.txt");
             ArrayList<String> res = q1.findNonStopWords();
+            System.out.println(String.join(" ", res) + "\n");
             int maxSize = Math.min(500, res.size());
 
+            System.out.println("100 WORDS:\n");
             measureSortPerformance(res.subList(0, 100).toArray(new String[100]));
+            System.out.println("200 WORDS:\n");
             measureSortPerformance(res.subList(0, 200).toArray(new String[200]));
+            System.out.println("" + maxSize + " WORDS:\n");
             measureSortPerformance(res.subList(0, maxSize).toArray(new String[maxSize]));
         }
         catch (FileNotFoundException err) {
@@ -26,7 +30,7 @@ public class Solution {
         sort1.printComparisons();
 
         long insertionSortTime = System.nanoTime() - beforeInsertionSort;
-        System.out.println("INSERTION SORT -> Words: " + words.length + " | Time taken (in nanoseconds: " + insertionSortTime + "\n");
+        System.out.println("INSERTION SORT -> Time taken (in nanoseconds: " + insertionSortTime + "\n");
 
         long beforeMergeSort = System.nanoTime();
         MergeSort sort2 = new MergeSort(words);
@@ -34,7 +38,7 @@ public class Solution {
         sort2.printComparisons();
 
         long mergeSortTime = System.nanoTime() - beforeMergeSort;
-        System.out.println("MERGE SORT -> Words: " + words.length + " | Time taken (in nanoseconds): " + mergeSortTime + "\n");
+        System.out.println("MERGE SORT -> Time taken (in nanoseconds): " + mergeSortTime + "\n");
     }
 }
 
@@ -86,11 +90,12 @@ class Question1 {
             for (int i = 0; i < N; i++) {
                 char cur = word.charAt(i);
                 int index = Character.isLetter(cur) ? Character.toUpperCase(cur) - 33 : cur - 33;
+                if (!Character.isLetter(cur)) System.out.println("Cur: " + cur + " Index: " + index);
 
                 if ("{|}~".contains("" + cur)) index -= 26;
                 if (index > 66 || tmp.children[index] == null) break;
 
-                if (tmp.children[index].isWord && (i == N - 1 || (i == N - 2 && !Character.isLetter(word.charAt(i + 1))))) {
+                if (tmp.children[index].isWord && i == N - 1) {
                     valid = false;
                     break;
                 }
@@ -146,7 +151,7 @@ class Trie {
 }
 
 class MergeSort {
-    private int comp;
+    private int comparisons;
     public String[] words;
 
     public MergeSort(String[] words) {
@@ -179,19 +184,19 @@ class MergeSort {
                 ri++;
             }
 
-            comp++;
+            comparisons++;
         }
 
         return merged;
     }
 
     public void printComparisons() {
-        System.out.println("MERGE SORT -> Words: " + words.length + " | Comparisons: " + comp);
+        System.out.println("MERGE SORT -> Comparisons: " + comparisons);
     }
 }
 
 class InsertionSort {
-    private int comp;
+    private int comparisons;
     public String[] words;
 
     public InsertionSort(String[] words) {
@@ -206,7 +211,7 @@ class InsertionSort {
             while (index > 0 && words[index - 1].toLowerCase().compareTo(cur.toLowerCase()) > 0) {
                 words[index] = words[index - 1];
                 index--;
-                comp++;
+                comparisons++;
             }
 
             words[index] = cur;
@@ -216,6 +221,6 @@ class InsertionSort {
     }
 
     public void printComparisons() {
-        System.out.println("INSERTION SORT -> Words: " + words.length + " | Comparisons: " + comp);
+        System.out.println("INSERTION SORT -> Comparisons: " + comparisons);
     }
 }
