@@ -5,101 +5,87 @@ import java.io.*;
 public class Main {
     public static void main(String[] args) {
         try {
-            Question1 q1 = new Question1("C:\\Users\\tarri\\IdeaProjects\\program\\src\\stopwords.txt", "C:\\Users\\tarri\\IdeaProjects\\program\\src\\input.txt");
+            Question1 q1 = new Question1("C:\\Users\\Tarrin\\IdeaProjects\\javaProject\\src\\stopwords.txt", "C:\\Users\\Tarrin\\IdeaProjects\\javaProject\\src\\input.txt");
             ArrayList<String> res = q1.findNonStopWords();
             System.out.println(String.join(" ", res) + "\n");
+
             int maxSize = Math.min(500, res.size());
+            MergeSort mergeSort = new MergeSort();
+            InsertionSort insertionSort = new InsertionSort();
 
             System.out.println("100 WORDS:\n");
-            measureSortPerformance(res.subList(0, 100).toArray(new String[100]));
+            measureSortPerformance(res.subList(0, 100).toArray(new String[100]), mergeSort);
+            measureSortPerformance(res.subList(0, 100).toArray(new String[100]), insertionSort);
+
             System.out.println("200 WORDS:\n");
-            measureSortPerformance(res.subList(0, 200).toArray(new String[200]));
+            measureSortPerformance(res.subList(0, 200).toArray(new String[200]), mergeSort);
+            measureSortPerformance(res.subList(0, 200).toArray(new String[200]), insertionSort);
+
             System.out.println("" + maxSize + " WORDS:\n");
-            measureSortPerformance(res.subList(0, maxSize).toArray(new String[maxSize]));
+            measureSortPerformance(res.subList(0, maxSize).toArray(new String[maxSize]), mergeSort);
+            measureSortPerformance(res.subList(0, maxSize).toArray(new String[maxSize]), insertionSort);
         }
         catch (FileNotFoundException err) {
             System.out.println(err.getMessage());
         }
     }
 
-    public static void measureSortPerformance(String[] words) {
-        long beforeInsertionSort = System.nanoTime();
-        InsertionSort sort1 = new InsertionSort(words);
-        sort1.insertionSort();
-        sort1.printComparisons();
+    public static <T extends ISort> void measureSortPerformance(String[] words, T obj) {
+        long start = System.nanoTime();
+        obj.sort(words);
+        long time = System.nanoTime() - start;
 
-        long insertionSortTime = System.nanoTime() - beforeInsertionSort;
-        System.out.println("INSERTION SORT -> Time taken (in nanoseconds: " + insertionSortTime + "\n");
-
-        long beforeMergeSort = System.nanoTime();
-        MergeSort sort2 = new MergeSort(words);
-        sort2.mergeSort(0, words.length - 1);
-        sort2.printComparisons();
-
-        long mergeSortTime = System.nanoTime() - beforeMergeSort;
-        System.out.println("MERGE SORT -> Time taken (in nanoseconds): " + mergeSortTime + "\n");
+        System.out.println(obj + " Comparisons -> " + obj.getComparisons());
+        System.out.println(obj + " Time taken (in nanoseconds: " + time + "\n");
     }
 }
 
 class Question1 {
-    private ArrayList<String> stopWords;
-    public ArrayList<String> inputWords;
+    private final Set<String> stopWords;
+    public List<String> inputWords;
 
     public Question1(String stopWordsPath, String inputPath) throws FileNotFoundException {
-        stopWords = new ArrayList<>();
-        readWords(stopWordsPath, true);
-        readWords(inputPath, false);
+        stopWords = new HashSet<>();
+        inputWords = new ArrayList<>();
+        readWords(stopWordsPath, stopWords);
+        readWords(inputPath, inputWords);
     }
 
-    private void readWords(String stopWordsPath, boolean areStopWords) throws FileNotFoundException {
+    private <T extends Collection<String>> void readWords(String stopWordsPath, T words) throws FileNotFoundException {
         try {
             File file = new File(stopWordsPath);
             Scanner scanner = new Scanner(file);
-            ArrayList<String> words = new ArrayList<>();
 
             while (scanner.hasNextLine()) {
                 String next = scanner.next();
                 words.add(next);
             }
 
-            if (areStopWords) this.stopWords = words;
-            else this.inputWords = words;
             scanner.close();
-        }
-        catch (FileNotFoundException err) {
+        } catch (FileNotFoundException err) {
             throw new FileNotFoundException("File was not found");
         }
     }
 
     public ArrayList<String> findNonStopWords() {
         ArrayList<String> nonStopWords = new ArrayList<>();
-        Trie trie = new Trie();
-        trie.insertWords(stopWords);
 
         for (String word : inputWords) {
-            Trie.TrieNode tmp = trie.root;
             int N = word.length();
-            boolean valid = true;
+            int index = N - 1;
 
-            for (int i = 0; i < N; i++) {
-                char cur = word.charAt(i);
-                int index = Character.isLetter(cur) ? Character.toUpperCase(cur) - 33 : cur - 33;
-                if (!Character.isLetter(cur)) System.out.println("Cur: " + cur + " Index: " + index);
-
-                if ("{|}~".contains("" + cur)) index -= 26;
-                if (index > 66 || tmp.children[index] == null) break;
-
-                if (tmp.children[index].isWord && i == N - 1) {
-                    valid = false;
-                    break;
-                }
-                else {
-                    tmp = tmp.children[index];
-                }
+            while (!Character.isLetter(word.charAt(index)) && !Character.isDigit(word.charAt(index))) {
+                index--;
             }
 
-            if (valid) {
+            String str = word.substring(0, index + 1).toLowerCase();
+            if (!stopWords.contains(str)) {
                 nonStopWords.add(word);
+                continue;
+            }
+
+            if (index < N - 1) {
+                nonStopWords.add(word.substring(index + 1, N));
             }
         }
 
@@ -107,53 +93,19 @@ class Question1 {
     }
 }
 
-class Trie {
-    class TrieNode {
-        public TrieNode[] children;
-        public boolean isWord;
-
-        public TrieNode() {
-            this.children = new TrieNode[67];
-            this.isWord = false;
-        }
-    }
-
-    public TrieNode root;
-
-    public Trie() {
-        root = new TrieNode();
-    }
-
-    public void insertWords(ArrayList<String> stopWords) {
-        for (String word : stopWords) {
-            TrieNode tmp = root;
-            int N = word.length();
-
-            for (int i = 0; i < N; i++) {
-                char cur = word.charAt(i);
-                int index = Character.isLetter(cur) ? Character.toUpperCase(cur) - 33 : cur - 33;
-
-                if ("{|}~".contains("" + cur))
-                    index -= 26;
-
-                if (tmp.children[index] == null) tmp.children[index] = new TrieNode();
-                if (i == N - 1) tmp.children[index].isWord = true;
-                tmp = tmp.children[index];
-            }
-        }
-    }
-}
-
 interface ISort {
-    void printComparisons();
+    int getComparisons();
+    String[] sort(String[] words);
+    String toString();
 }
 
 class MergeSort implements ISort {
     private int comparisons;
-    public String[] words;
+    private String[] words;
 
-    public MergeSort(String[] words) {
+    public String[] sort(String[] words) {
         this.words = words;
+        return mergeSort(0, words.length - 1);
     }
 
     public String[] mergeSort(int low, int high) {
@@ -174,7 +126,7 @@ class MergeSort implements ISort {
         String[] merged = new String[N + M];
 
         for (int i = 0; i < N + M; i++) {
-            if (right_index == M || (left_index < N && left[left_index].toLowerCase().compareTo(right[right_index]) <= 0)) {
+            if (right_index == M || (left_index < N && left[left_index].compareToIgnoreCase(right[right_index]) <= 0)) {
                 merged[i] = left[left_index];
                 left_index++;
             } else {
@@ -188,17 +140,23 @@ class MergeSort implements ISort {
         return merged;
     }
 
-    public void printComparisons() {
-        System.out.println("MERGE SORT -> Comparisons: " + comparisons);
+    public int getComparisons() {
+        return comparisons;
+    }
+
+    @Override
+    public String toString() {
+        return "MERGE SORT";
     }
 }
 
 class InsertionSort implements ISort {
     private int comparisons;
-    public String[] words;
+    private String[] words;
 
-    public InsertionSort(String[] words) {
+    public String[] sort(String[] words) {
         this.words = words;
+        return insertionSort();
     }
 
     public String[] insertionSort() {
@@ -206,7 +164,7 @@ class InsertionSort implements ISort {
             String cur = words[i];
             int index = i;
 
-            while (index > 0 && words[index - 1].toLowerCase().compareTo(cur.toLowerCase()) > 0) {
+            while (index > 0 && words[index - 1].compareToIgnoreCase(cur) > 0) {
                 words[index] = words[index - 1];
                 index--;
                 comparisons++;
@@ -218,7 +176,12 @@ class InsertionSort implements ISort {
         return words;
     }
 
-    public void printComparisons() {
-        System.out.println("INSERTION SORT -> Comparisons: " + comparisons);
+    public int getComparisons() {
+        return comparisons;
+    }
+
+    @Override
+    public String toString() {
+        return "INSERTION SORT";
     }
 }
