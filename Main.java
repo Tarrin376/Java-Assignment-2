@@ -7,7 +7,7 @@ public class Main {
         try {
             Question1 q1 = new Question1("C:\\Users\\Tarrin\\IdeaProjects\\javaProject\\src\\stopwords.txt", "C:\\Users\\Tarrin\\IdeaProjects\\javaProject\\src\\input.txt");
             ArrayList<String> res = q1.findNonStopWords();
-            System.out.println(String.join(" ", res) + "\n");
+            System.out.println(res);
 
             int maxSize = Math.min(500, res.size());
             MergeSort mergeSort = new MergeSort();
@@ -51,14 +51,15 @@ class Question1 {
         readWords(inputPath, inputWords);
     }
 
-    private <T extends Collection<String>> void readWords(String stopWordsPath, T words) throws FileNotFoundException {
+    private <T extends Collection<String>> void readWords(String stopWordsPath, T obj) throws FileNotFoundException {
         try {
             File file = new File(stopWordsPath);
             Scanner scanner = new Scanner(file);
 
             while (scanner.hasNextLine()) {
                 String next = scanner.next();
-                words.add(next);
+                if (obj instanceof HashSet) obj.add(next.toLowerCase());
+                else obj.add(next);
             }
 
             scanner.close();
@@ -78,8 +79,8 @@ class Question1 {
                 index--;
             }
 
-            String str = word.substring(0, index + 1).toLowerCase();
-            if (!stopWords.contains(str)) {
+            String str = word.substring(0, index + 1);
+            if (!stopWords.contains(str.toLowerCase()) || (str.equals(str.toUpperCase()) && str.length() > 1 && !stopWords.contains(str))) {
                 nonStopWords.add(word);
                 continue;
             }
