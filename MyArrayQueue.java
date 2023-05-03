@@ -56,19 +56,20 @@ public class MyArrayQueue
     /** insert theElement at the rear of the queue */
     public void enqueue(Object theElement)
     {
-        // Add your code here
         int nextRear = (rear + 1) % queue.length;
+        Object[] newQueue = new Object[queue.length * 2];
+
+        // Checks that the queue is not full.
         if (nextRear != front) {
             rear = nextRear;
             queue[nextRear] = theElement;
             return;
         }
 
-        Object[] newQueue = new Object[queue.length * 2];
-        for (int i = front; i < front + queue.length; i++) {
-            int pos = i >= queue.length ? i % queue.length : i;
-            newQueue[i - front] = queue[pos];
-        }
+        // Copies each element from the old queue into the new queue of double the size
+        // while still maintaining the same order.
+        for (int i = front; i < front + queue.length; i++)
+            newQueue[i - front] = queue[i % queue.length];
 
         newQueue[queue.length] = theElement;
         rear = queue.length;
